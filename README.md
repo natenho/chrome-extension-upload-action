@@ -9,10 +9,6 @@ It uses the specified refresh token to generate an access token for uploading.
 
 Your tokens client id
 
-### `client-secret`
-
-Your tokens client secret
-
 ### `refresh-token`
 
 Google developer refresh token
@@ -34,11 +30,10 @@ Publish or not after upload (true / false)
 ## Example usage
 
 ```
-uses: Klemensas/chrome-extension-upload-action@$VERSION
+uses: natenho/chrome-extension-upload-action@$VERSION
 with:
   refresh-token: 'xxxxxxxxxxxxxxxxxxxxxx'
-  client-id: 'xxxxxxxxxxxxx'
-  client-secret: 'xxxxxxxxxxxx'
+  client-id: 'xxxxxxxxxxxxx'  
   file-name: './extension.zip'
   app-id: 'xzc12xzc21cx23'
   publish: true

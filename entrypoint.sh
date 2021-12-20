@@ -2,54 +2,55 @@
 
 set -e
 
+refresh_token=$1
+client_id=$2
+file_name=$3
+app_id=$4
+should_publish=$5
+
 token=`curl \
 --silent \
 --fail \
--H "Content-Type: application/json" \
--d '{
-	"refresh_token": "'$1'",
-	"client_id": "'$2'",
-	"client_secret": "'$3'",
-	"grant_type": "refresh_token"
-}' \
--X POST \
--v https://www.googleapis.com/oauth2/v4/token \
+--location --request POST 'https://oauth2.googleapis.com/token' \
+--form client_id="$client_id" \
+--form grant_type="refresh_token" \
+--form redirect_uri="urn:ietf:wg:oauth:2.0:oob" \
+--form refresh_token="$refresh_token" \
 | \
 jq -r '.access_token'`
 
-status=`curl \
+response=`curl \
 --silent \
 --show-error \
 --fail \
 -H "Authorization: Bearer $token" \
 -H "x-goog-api-version: 2" \
 -X PUT \
--T $4 \
--v https://www.googleapis.com/upload/chromewebstore/v1.1/items/$5 \
-| \
-jq -r '.uploadState'`
+-T $file_name \
+-v https://www.googleapis.com/upload/chromewebstore/v1.1/items/$app_id`
 
-if [ $status == 'FAILURE' ]
-then
+upload_state=`echo $response | jq -r '.uploadState'`
+
+if [ "$upload_state" = "FAILURE" ]; then
+  echo $response
   exit 1
 fi
 
-if [ $6 == true ] #publish
-then
-  publish=`curl \
+if [ "$should_publish" = "true" ]; then
+  response=`curl \
   --silent \
   --show-error \
   --fail \
   -H "Authorization: Bearer $token" \
   -H "x-goog-api-version: 2" \
   -X POST \
-  -v https://www.googleapis.com/chromewebstore/v1.1/items/$5/publish \
-  -d publishTarget=default \
-  | \
-  jq -r '.publishState'`
+  -v https://www.googleapis.com/chromewebstore/v1.1/items/$app_id/publish \
+  -d publishTarget=default`
 
-  if [ $publish == 'FAILURE' ]
-  then
+  publish_state=`echo $response | jq -r '.uploadState'`
+
+  if [ "$publish_state" = "FAILURE" ]; then
+    echo $response
     exit 1
   fi
 fi
